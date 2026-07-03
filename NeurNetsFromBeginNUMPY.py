@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 #BOTH FUNCTIONS ONLY FOR VERTICAL MATRICES
 def sigmoid(X):
     S = np.zeros(shape=X.shape)
@@ -30,7 +31,6 @@ class DenseLayer:
         if self.delta is None:
             raise Exception("THERE IS NO DELTA! Throw Backward before Learn")
         else:
-            #print("KJA", self.weights.T.shape, self.remInputs, self.delta.T)
             deltaWeight = self.remInputs @ self.delta.T
             wT = self.weights.T - learning_rate*deltaWeight
             self.weights = wT.T
@@ -40,6 +40,7 @@ class Model:
         self.input_size = input_size
         self.layer_sizes = layer_sizes
         self.layers = []
+        self.error = 0
         for i in range(0, len(self.layer_sizes)):
             if i == 0:
                 layer = DenseLayer(input_size,layer_sizes[0])
@@ -47,34 +48,43 @@ class Model:
                 layer = DenseLayer(layer_sizes[i-1],layer_sizes[i])
             self.layers.append(layer)
     def Forward(self, inputs):
-        if len(inputs) != self.input_size:
+        '''Inputs->outputs'''
+        input_data = np.expand_dims(np.array(inputs),0)
+        if len(input_data[0]) != self.input_size:
             raise Exception("Wrong input size!")
-        x = inputs
+        x = input_data.T
         for i in range(0, len(self.layer_sizes)):
             x = self.layers[i].Forward(x) 
         return x
-    def Backward(self, inputs, real_values, learning_rate):
+    def Backward(self, inputs, real_values):
+        '''Calculating deltas and error'''
         #first delta - the 1D matrix containing all first derivtives of target function via model-output values
         predictions = self.Forward(inputs)
+        self.error = math.sqrt(np.sum((predictions - real_values)*(predictions - real_values)))
+
         sq_delta = 2*(predictions - real_values) #Squared error
         delta = sigmoidDer( self.layers[len(self.layer_sizes)-1].S)*sq_delta
         self.layers[len(self.layer_sizes)-1].delta = delta
         for i in range(len(self.layer_sizes)-2, -1,-1):
             self.layers[i].Backward(delta, self.layers[i+1].weights)
             delta = self.layers[i].delta
-        self.Learn(learning_rate)
     def Learn(self, learning_rate):
+        '''Using deltas to learn the net'''
         for i in range(0, len(self.layer_sizes)):
             #print(self.layers[i].output_size)
             self.layers[i].Learn(learning_rate)
+    def Train(self, data_base, epochs, learning_rate):
+        '''Actual train function'''
+        for i in range(epochs):
+            cum_error = 0
+            for data in data_base:
+                input_data = data[0]
+                output_data = np.expand_dims(np.array(data[1]),0)
+                self.Backward(input_data,output_data)
+                self.Learn(learning_rate)
+                cum_error = cum_error + self.error
+            cum_error = cum_error / len(data_base)
+            print('Epoch nr. ' + str(i) + ' Error: ' + str(cum_error))
 
-m = Model(2, (4,6,1))
-databs = [[(4,2),1],[(1,1),1],[(1.5,1.6),1],[(1.2,1.4),1],
-          [(3.4,4),0],[(0.3,0.5),0],[(1.9,0.1),0],[(0.2,4.4),0],[(1.5,3.4),0],
-          [(4,1.4),0],[(4,3),0]]
-for dt in databs:
-    dt[1] = [dt[1]]
-print(m.Forward([[3],[4]]))
+
 #Sigmoid wiec wyjscia sa od [0,1]
-m.Backward([[3],[4]],[[1]], 0.02)
-print(m.Forward([[3],[4]]))
