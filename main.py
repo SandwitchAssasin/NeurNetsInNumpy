@@ -2,7 +2,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import NeurNetsFromBeginNUMPY as NeurNFN
-
+'''
 m = NeurNFN.Model(2, (4,6,1))
 print(m.Forward((4,2)))
 databs = [[(4,2),1],[(1,1),1],[(1.5,1.6),1],[(1.2,1.4),1],
@@ -28,3 +28,50 @@ for cint in range(0,1000):
 print(m.Forward((4,2)))
 plt.scatter(X,Y,c=c,cmap='coolwarm')
 plt.show()
+'''
+
+#Real project - Irises
+
+def BladPredykcji(pred, real):
+    suma = 0
+    for i in range(0,len(pred)):
+        suma = suma + (pred[i] - real[i])**2
+    return suma/len(pred)
+
+with open('iris.txt') as f:
+    irises = {'Iris-setosa':0,'Iris-versicolor':1,'Iris-virginica':2}
+    irises_res = {0:'Iris-setosa',1:'Iris-versicolor',2:'Iris-virginica'}
+    data =[]
+
+    lines = f.readlines()
+    for line in lines:
+        boxes = line.rstrip('\n').split(',')
+        floatline = []
+        dataline = []
+
+        floatline.append((float)(boxes[0]))
+        floatline.append((float)(boxes[1]))
+        floatline.append((float)(boxes[2]))
+        floatline.append((float)(boxes[3]))
+        dataline.append(tuple(floatline))
+        irisL = [0,0,0]
+        mI = irises[boxes[4]]
+        irisL[mI] = 1
+        dataline.append(irisL)
+        data.append(dataline)
+print(data)
+dataTrain = []
+dataTest = []
+for d in data:
+    r = np.random.uniform(0,1)
+    if r < 0.8:
+        dataTrain.append(d)
+    else:
+        dataTest.append(d)
+m = NeurNFN.Model(4, (10,20,10,3))
+m.Train(dataTrain,epochs = 400, learning_rate = 0.03)
+for d in dataTest:
+    predictions = m.Forward(d[0])
+    real = d[1]
+    print(irises_res[np.argmax(real)], ":", irises_res[np.argmax(predictions)], ":" , round(BladPredykcji(predictions,real)[0],2))
+    

@@ -60,9 +60,10 @@ class Model:
         '''Calculating deltas and error'''
         #first delta - the 1D matrix containing all first derivtives of target function via model-output values
         predictions = self.Forward(inputs)
-        self.error = math.sqrt(np.sum((predictions - real_values)*(predictions - real_values)))
+        self.error = math.sqrt(np.sum((predictions - real_values.T)*(predictions - real_values.T)))
 
-        sq_delta = 2*(predictions - real_values) #Squared error
+        #print(predictions, real_values.T)
+        sq_delta = 2*(predictions - real_values.T) #Squared error
         delta = sigmoidDer( self.layers[len(self.layer_sizes)-1].S)*sq_delta
         self.layers[len(self.layer_sizes)-1].delta = delta
         for i in range(len(self.layer_sizes)-2, -1,-1):
@@ -71,7 +72,6 @@ class Model:
     def Learn(self, learning_rate):
         '''Using deltas to learn the net'''
         for i in range(0, len(self.layer_sizes)):
-            #print(self.layers[i].output_size)
             self.layers[i].Learn(learning_rate)
     def Train(self, data_base, epochs, learning_rate):
         '''Actual train function'''
@@ -84,7 +84,7 @@ class Model:
                 self.Learn(learning_rate)
                 cum_error = cum_error + self.error
             cum_error = cum_error / len(data_base)
-            print('Epoch nr. ' + str(i) + ' Error: ' + str(cum_error))
+            print('Epoch nr. ' + str(i) + ' Error: ' + str(round(cum_error,4)))
 
 
 #Sigmoid wiec wyjscia sa od [0,1]
