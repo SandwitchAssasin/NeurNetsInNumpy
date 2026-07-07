@@ -49,10 +49,10 @@ with open('iris.txt') as f:
         floatline = []
         dataline = []
 
-        floatline.append((float)(boxes[0]))
-        floatline.append((float)(boxes[1]))
-        floatline.append((float)(boxes[2]))
-        floatline.append((float)(boxes[3]))
+        floatline.append((float)(boxes[0])/10)
+        floatline.append((float)(boxes[1])/10)
+        floatline.append((float)(boxes[2])/10)
+        floatline.append((float)(boxes[3])/10)
         dataline.append(tuple(floatline))
         irisL = [0,0,0]
         mI = irises[boxes[4]]
@@ -68,10 +68,31 @@ for d in data:
         dataTrain.append(d)
     else:
         dataTest.append(d)
-m = NeurNFN.Model(4, (10,20,10,3))
-m.Train(dataTrain,epochs = 400, learning_rate = 0.03)
+        '''
+l1 = NeurNFN.DenseLayer(4,10,'leaky_relu', 0.3)
+l2 = NeurNFN.DenseLayer(10,20,'leaky_relu', 0.3)
+l3 = NeurNFN.DenseLayer(20,10,'leaky_relu', 0.3)
+l4 = NeurNFN.DenseLayer(10,3,'softmax')
+lay = [l1,l2,l3,l4]
+m = NeurNFN.Model(lay)
+m.Train(dataTrain,epochs = 300, learning_rate = 0.006)
+'''
+l1_2 = NeurNFN.DenseLayer(4,12,'sigmoid')
+l2_2 = NeurNFN.DenseLayer(12,40,'sigmoid')
+l3_2 = NeurNFN.DenseLayer(40,12,'sigmoid')
+l4_2 = NeurNFN.DenseLayer(12,3,'sigmoid')
+lay = [l1_2,l2_2,l3_2,l4_2]
+m2 = NeurNFN.Model(lay)
+
+m2.Train(dataTrain,epochs = 500, learning_rate = 0.03)
+'''
 for d in dataTest:
     predictions = m.Forward(d[0])
     real = d[1]
     print(irises_res[np.argmax(real)], ":", irises_res[np.argmax(predictions)], ":" , round(BladPredykcji(predictions,real)[0],2))
-    
+'''
+for d in dataTest:
+    predictions = m2.Forward(d[0])
+    real = d[1]
+    print(irises_res[np.argmax(real)], ":", irises_res[np.argmax(predictions)], ":" , round(BladPredykcji(predictions,real)[0],2))
+ 
